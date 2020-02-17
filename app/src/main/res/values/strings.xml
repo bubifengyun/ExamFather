@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">考试系统</string>
     <string name="class_level">将士等级</string>
+    <string name="test_game">沙盘推演</string>
     <string name="new_game">开疆拓土</string>
     <string name="continue_game">再续辉煌</string>
     <string name="error_history">前车之鉴</string>

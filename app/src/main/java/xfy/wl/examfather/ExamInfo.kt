@@ -1,6 +1,6 @@
 package xfy.wl.examfather
 
-data class ExamInfo(var rowid: Long=0, var xuhao: Int=0, var name: String="", var age: Int=0,
-                    var height: Long=0, var weight: Float=0f, var married: Boolean=false,
-                    var update_time: String="", var phone: String="", var password: String="") {
+data class ExamInfo(var question: String = "", var answer: String = "", var item1: String ="",
+                    var item2: String ="", var item3: String = "", var item4: String ="",
+                    var explains: String? ="", var url: String? ="") {
 }
