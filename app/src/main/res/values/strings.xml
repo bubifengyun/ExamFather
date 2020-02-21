@@ -7,4 +7,7 @@
     <string name="error_history">前车之鉴</string>
     <string name="law_sets">兵法战策</string>
     <string name="exit">解甲归田</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

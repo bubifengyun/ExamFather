@@ -1,23 +1,33 @@
 package xfy.wl.examfather
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.viewpager.widget.ViewPager
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.activity_game.*
 import org.jetbrains.anko.alert
+import org.jetbrains.anko.toast
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 
 
-class GameActivity : AppCompatActivity() {
+
+
+class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionListener {
+    override fun onFragmentInteraction(uri: Uri) {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     var is_odd: Boolean = true
     private var countDownTimer: ExamTimer? = null
     var IS_EXAM = "is_exam"
-    private val viewPager: ViewPager? = null
     var isExam: Boolean = false
-    private val timerLayout: LinearLayout? = null
     private var currentTimeMS = 45 * 60_000L
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,7 +36,7 @@ class GameActivity : AppCompatActivity() {
 
         main_bar.setOnClickListener(this::onClickOpenBottomSheetDialog)
         question_back.setOnClickListener(this::onClickBackHandler)
-        //viewPager.setAdapter(MyPagerAdapter(supportFragmentManager))
+        main_viewpager.adapter = GameViewPagerAdapter(this)
         //viewPager.setOnPageChangeListener(MyPagerChangeListner())
 
         isExam = intent.getBooleanExtra(IS_EXAM, true)
@@ -74,35 +84,53 @@ class GameActivity : AppCompatActivity() {
         bottomSheetDialog?.show()
         gridView.onItemClickListener =
             AdapterView.OnItemClickListener { parent, view, position, id ->
-                viewPager?.setCurrentItem(position, false)
+                main_viewpager.setCurrentItem(position, false)
                 bottomSheetDialog?.dismiss()
             }
     }
 
     //提交答案
     fun submitAnswer() {
-        //startActivity(Intent(this, ResultActivity::class.java))
+        startActivity(Intent(this, ResultActivity::class.java))
         finish()
     }
 
     private fun onClickBackHandler(view: View) {
         var finishAnswer = 0
         var rightAnswer = 0
-//        for (r in Question.result) {
-//            if (r.isChooseResult())
-//                rightAnswer++
-//            if (r.isFinishAnswer())
-//                finishAnswer++
-//        }
+        var isBackButton = view.id == R.id.question_back
+        var buttonText = if (isBackButton) "直接返回" else "取消交卷"
+
+        for (exam in ExamDBHelper.examInfoList) {
+            if (exam.isRightChoice())
+                rightAnswer++
+            if (exam.hasChoosedResult())
+                finishAnswer++
+        }
 
         val message = "您已回答了" + finishAnswer + "题(共100题),考试得分" + rightAnswer + ",确定交卷？"
         alert(message, "温馨提示") {
             positiveButton("确定交卷") {
                 submitAnswer()
             }
-            negativeButton("直接返回") {
-                this@GameActivity.finish()
+            negativeButton(buttonText) {
+                if (view.id == question_back.id) {
+                    this@GameActivity.finish()
+                }
             }
         }.show()
+    }
+
+    private inner class GameViewPagerAdapter(ga: GameActivity) : FragmentStateAdapter(ga) {
+        override fun createFragment(position: Int): Fragment {
+            val gameFragment = GameFragment()
+            val bundle = Bundle()
+            bundle.putInt("position", position)
+            gameFragment.arguments = bundle
+            return gameFragment
+        }
+
+        override fun getItemCount(): Int = ExamDBHelper.examInfoList.size
+
     }
 }

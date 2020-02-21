@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.toast
 import xfy.wl.examfather.storage.AppPreferences
 import java.text.SimpleDateFormat
 import java.util.*
@@ -15,7 +16,6 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
-    var tvHighScore: TextView? = null
     private lateinit var examDBHelper: ExamDBHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,8 +30,6 @@ class MainActivity : AppCompatActivity() {
         button_error_history.setOnClickListener(this::onClickErrorHistory)
         button_law_sets.setOnClickListener(this::onClickLawSets)
         button_exit.setOnClickListener(this::onClickExit)
-
-
     }
 
     private fun onClickTestGame(view: View) {
@@ -39,48 +37,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onClickNewGame(view: View) {
-        Thread(Runnable {
-            // dummy thread mimicking some operation whose progress cannot be tracked
+        initData()
+    }
 
-            // display the indefinite progressbar
-            this@MainActivity.runOnUiThread(java.lang.Runnable {
+    private fun initData(tableName: String = ExamDBHelper.TABLE_NAME, condition: String = "1=1 limit 2") {
+        Thread(Runnable {
+            this@MainActivity.runOnUiThread(Runnable {
                 progressBar.visibility = View.VISIBLE
             })
 
-            // performing some dummy time taking operation
             try {
-//                var path: File = this.getDatabasePath("car.db")
-//                toast(path.toString())
-                val exam = examDBHelper.queryAll()
-//                for (item in exam) {
-//                    Thread.sleep(1000)
-//                }
+                ExamDBHelper.TABLE_NAME = tableName
+                ExamDBHelper.examInfoList = examDBHelper.query(condition)
                 startActivity(Intent(this, GameActivity::class.java))
             } catch (e: Exception) {
-                tv_current_score.text = e.message
                 e.printStackTrace()
             }
 
-            // when the task is completed, make progressBar gone
-            this@MainActivity.runOnUiThread(java.lang.Runnable {
+            this@MainActivity.runOnUiThread(Runnable {
                 progressBar.visibility = View.GONE
             })
         }).start()
-        //
     }
 
     private fun onClickContinueGame(view: View) {
         val preferences = AppPreferences(this)
         preferences.clearHighScore()
         Snackbar.make(view, "最高分重置成功", Snackbar.LENGTH_SHORT).show()
-        tvHighScore?.text = "最高分：${preferences.getHighScore()}"
     }
 
     private fun onClickErrorHistory(view: View) {
         val preferences = AppPreferences(this)
         preferences.clearHighScore()
         Snackbar.make(view, "最高分重置成功", Snackbar.LENGTH_SHORT).show()
-        tvHighScore?.text = "最高分：${preferences.getHighScore()}"
     }
 
     private fun onClickLawSets(view: View) {
