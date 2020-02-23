@@ -4,19 +4,18 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.GridView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.adapter.FragmentViewHolder
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.activity_game.*
 import org.jetbrains.anko.alert
-import org.jetbrains.anko.toast
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-
-
 
 
 class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionListener {
@@ -34,11 +33,15 @@ class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionList
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
 
+        GameActivity.rightTextView = findViewById<TextView>(R.id.main_right_tx)
+        GameActivity.errorTextView = findViewById<TextView>(R.id.main_error_tx)
+        GameActivity.totalTextView = findViewById(R.id.main_total_tx)
+        main_total_tx.text = "1/" + ExamDBHelper.examInfoList.size.toString()
+
         main_bar.setOnClickListener(this::onClickOpenBottomSheetDialog)
         question_back.setOnClickListener(this::onClickBackHandler)
         main_viewpager.adapter = GameViewPagerAdapter(this)
-        //viewPager.setOnPageChangeListener(MyPagerChangeListner())
-
+        main_viewpager.registerOnPageChangeCallback(viewPagerOnChangeCallback)
         isExam = intent.getBooleanExtra(IS_EXAM, true)
 
         if (!isExam) {//如果不是考试,就隐藏
@@ -77,7 +80,7 @@ class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionList
         gridView.verticalSpacing = 10
         gridView.horizontalSpacing = 10
         gridView.setBackgroundColor(-0x1)
-        //gridView.adapter = AnswerAdapter()
+        gridView.adapter = AnswerAdapter()
         gridView.scrollBarStyle = GridView.SCROLLBARS_OUTSIDE_INSET
         gridView.setPadding(20, 20, 20, 20)
         bottomSheetDialog?.setContentView(gridView)
@@ -102,9 +105,9 @@ class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionList
         var buttonText = if (isBackButton) "直接返回" else "取消交卷"
 
         for (exam in ExamDBHelper.examInfoList) {
-            if (exam.isRightChoice())
+            if (exam.isRightChoice)
                 rightAnswer++
-            if (exam.hasChoosedResult())
+            if (exam.hasFinishedResult)
                 finishAnswer++
         }
 
@@ -121,16 +124,63 @@ class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionList
         }.show()
     }
 
-    private inner class GameViewPagerAdapter(ga: GameActivity) : FragmentStateAdapter(ga) {
+    companion object {
+        var rightTextView: TextView? = null
+        var errorTextView: TextView? = null
+        var totalTextView: TextView? = null
+
+        fun nextQuestion() {
+//            var v = inflater.inflate(R.layout.fragment_game, container, false)
+//            var main_viewpager = .findViewByID
+//            if (main_viewpager.currentItem <= ExamDBHelper.examInfoList.size) {
+//                main_viewpager.currentItem++
+//            }
+        }
+
+
+        fun upDataRightAndError() {
+            var rightCount = 0
+            var errorCount = 0
+            for (examInfo in ExamDBHelper.examInfoList) {
+                if (examInfo.hasFinishedResult) {
+                    if (examInfo.isRightChoice) {
+                        rightCount++
+                    } else {
+                        errorCount++
+                    }
+                }
+            }
+            rightTextView?.text = rightCount.toString()
+            errorTextView?.text = errorCount.toString()
+        }
+
+
+
+    }
+
+
+
+    private inner class GameViewPagerAdapter(ga: GameActivity) : FragmentStateAdapter(ga){
         override fun createFragment(position: Int): Fragment {
             val gameFragment = GameFragment()
             val bundle = Bundle()
             bundle.putInt("position", position)
             gameFragment.arguments = bundle
+            //
             return gameFragment
         }
 
         override fun getItemCount(): Int = ExamDBHelper.examInfoList.size
 
     }
+
+    private val viewPagerOnChangeCallback= object : ViewPager2.OnPageChangeCallback() {
+        override fun onPageSelected(position: Int) {
+            GameActivity.totalTextView!!.text = (1 + position).toString() + "/" + ExamDBHelper.examInfoList.size.toString()
+        }
+    }
 }
+
+
+
+

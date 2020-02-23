@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         initData()
     }
 
-    private fun initData(tableName: String = ExamDBHelper.TABLE_NAME, condition: String = "1=1 limit 2") {
+    private fun initData(tableName: String = ExamDBHelper.TABLE_NAME, condition: String = "1=1 order by random() limit 100") {
         Thread(Runnable {
             this@MainActivity.runOnUiThread(Runnable {
                 progressBar.visibility = View.VISIBLE

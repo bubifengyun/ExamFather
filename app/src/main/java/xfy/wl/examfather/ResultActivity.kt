@@ -18,7 +18,7 @@ class ResultActivity : AppCompatActivity() {
 
         var rightAnswer = 0
         for (exam in ExamDBHelper.examInfoList) {
-            if (exam.isRightChoice())
+            if (exam.isRightChoice)
                 rightAnswer++
         }
 
