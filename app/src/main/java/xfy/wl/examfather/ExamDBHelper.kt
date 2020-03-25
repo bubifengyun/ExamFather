@@ -45,6 +45,7 @@ class ExamDBHelper(var context: Context, private var DB_VERSION: Int=CURRENT_VER
             if (cursor.moveToFirst()) {
                 while (true) {
                     val info = ExamInfo()
+                    info.id = cursor.getInt(cursor.getColumnIndex("id"))
                     info.test_type = cursor.getInt(cursor.getColumnIndex("test_type"))
                     info.point_id = cursor.getString(cursor.getColumnIndex("point_id"))
                     info.item_count = cursor.getInt(cursor.getColumnIndex("item_count"))
