@@ -36,6 +36,7 @@ class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionList
         GameActivity.rightTextView = findViewById<TextView>(R.id.main_right_tx)
         GameActivity.errorTextView = findViewById<TextView>(R.id.main_error_tx)
         GameActivity.totalTextView = findViewById(R.id.main_total_tx)
+        GameActivity.game_pager = findViewById(R.id.main_viewpager)
         main_total_tx.text = "1/" + ExamDBHelper.examInfoList.size.toString()
 
         main_bar.setOnClickListener(this::onClickOpenBottomSheetDialog)
@@ -128,17 +129,14 @@ class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionList
         var rightTextView: TextView? = null
         var errorTextView: TextView? = null
         var totalTextView: TextView? = null
+        var game_pager: ViewPager2? = null
 
         fun nextQuestion() {
-//            var v = inflater.inflate(R.layout.fragment_game, container, false)
-//            var main_viewpager = .findViewByID
-//            if (main_viewpager.currentItem <= ExamDBHelper.examInfoList.size) {
-//                main_viewpager.currentItem++
-//            }
+            game_pager!!.currentItem++
         }
 
 
-        fun upDataRightAndError() {
+        fun updateRightAndError() {
             var rightCount = 0
             var errorCount = 0
             for (examInfo in ExamDBHelper.examInfoList) {
@@ -166,7 +164,7 @@ class GameActivity : AppCompatActivity(), GameFragment.OnFragmentInteractionList
             val bundle = Bundle()
             bundle.putInt("position", position)
             gameFragment.arguments = bundle
-            //
+
             return gameFragment
         }
 

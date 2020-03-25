@@ -42,9 +42,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun initData(tableName: String = ExamDBHelper.TABLE_NAME, condition: String = "1=1 order by random() limit 100") {
         Thread(Runnable {
-            this@MainActivity.runOnUiThread(Runnable {
-                progressBar.visibility = View.VISIBLE
-            })
+//            this@MainActivity.runOnUiThread(Runnable {
+//                progressBar.visibility = View.VISIBLE
+//            })
 
             try {
                 ExamDBHelper.TABLE_NAME = tableName
@@ -54,9 +54,9 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
 
-            this@MainActivity.runOnUiThread(Runnable {
-                progressBar.visibility = View.GONE
-            })
+//            this@MainActivity.runOnUiThread(Runnable {
+//                progressBar.visibility = View.GONE
+//            })
         }).start()
     }
 

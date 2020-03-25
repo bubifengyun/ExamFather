@@ -8,19 +8,14 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.appcompat.widget.AppCompatRadioButton
 import android.widget.LinearLayout
 import android.widget.RadioGroup
-import android.text.TextUtils
-import android.graphics.drawable.BitmapDrawable
-import androidx.annotation.Nullable
 //import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat.getDrawable
-import com.bumptech.glide.Glide
+import kotlinx.android.synthetic.main.fragment_game.*
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -39,14 +34,14 @@ private const val ARG_PARAM2 = "param2"
 class GameFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var position: Int = 0
+    private val TIAN_KONG: Int = 1
+    private val XUAN_ZE: Int = 2
+    private val PAN_DUAN: Int = 3
+    private val JIAN_DA: Int = 4
+    private val ZONG_SHU: Int = 5
+    private val DUO_XUAN: Int = 6
 
     var v: View? = null
-    private var titleImg: ImageView? = null
-    private var title: TextView? = null
-    private var radioGroup: RadioGroup? = null
-    private var explainLayout: LinearLayout? = null
-    private var explainTxt: TextView? = null
-    private var checkLayout: LinearLayout? = null
 
     lateinit var listRadio: MutableList<AppCompatRadioButton>
     lateinit var listCheck: MutableList<AppCompatCheckBox>
@@ -67,66 +62,75 @@ class GameFragment : Fragment() {
         listCheck = ArrayList<AppCompatCheckBox>()
 
         v = inflater.inflate(R.layout.fragment_game, container, false)
-
-        initView()
-        initData()
-        initListner()
-
-        // Inflate the layout for this fragment
         return v
     }
 
-    private fun initView() {
-        titleImg = v!!.findViewById(R.id.que_img)
-        title = v!!.findViewById(R.id.que_title)
-        radioGroup = v!!.findViewById(R.id.que_group)
-        explainLayout = v!!.findViewById(R.id.que_explain_layout)
-        explainTxt = v!!.findViewById(R.id.que_explain_txt)
-        checkLayout = v!!.findViewById(R.id.que_check_layout)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // Kotlin之Fragment中直接引用视图控件id
+        // https://blog.csdn.net/wxx_csdn/article/details/78261903
+        initData()
+        initListener()
     }
 
     private fun initData() {
         examInfo = ExamDBHelper.examInfoList[position]
-        title!!.text = examInfo!!.question
-        explainTxt!!.text = examInfo!!.explains
-
-        answer = Integer.parseInt(examInfo!!.answer)
-        if (answer <= 4) {
-            initRadioButton()
-        } else {
-            initCheckBox()
+        when (examInfo.test_type) {
+            TIAN_KONG -> renderTianKong()
+            XUAN_ZE -> renderXuanZe()
+            PAN_DUAN -> renderPanDuan()
+            JIAN_DA, ZONG_SHU -> renderLongEditText()
+            DUO_XUAN -> renderDuoXuan()
+            else -> {}
         }
+        answer = Integer.parseInt(examInfo.ans_area);
+        if (answer > 4) {
+            renderDuoXuan()
+        } else {
+            renderXuanZe()
+        }
+    }
 
-        if (!TextUtils.isEmpty(examInfo!!.url))
-            Glide.with(context)
-                .load(examInfo!!.url)
-//                .apply(RequestOptions().placeholder(R.drawable.loading)
-//                ).error(R.drawable.load_fail)
-                .into(
-                titleImg
-            )
-        else titleImg!!.visibility = View.GONE
-        titleImg!!.visibility = View.GONE
+    fun renderTianKong() {
+        initEditText()
+    }
+
+    private fun renderXuanZe() {
+        var lines = examInfo.content!!.split("\n").toMutableList()
+        que_title.text = "第" + (position+1).toString() + "题（选择题）." + lines.first()
+        lines.removeAt(0)
+        while (lines.remove(""));
+        initRadioButton(lines as ArrayList<String>)
+    }
+
+    private fun renderPanDuan() {
+        que_title.text = "第" + (position+1).toString() + "题（判断题）." + examInfo.content
+        initRadioButton(arrayListOf("正确","错误"))
+    }
+
+    private fun renderDuoXuan() {
+        var lines = examInfo.content!!.split("\n").toMutableList()
+        que_title.text = "第" + (position+1).toString() + "题（多选题）." + lines.first()
+        lines.removeAt(0)
+        while (lines.remove(""));
+        initCheckBox(lines as ArrayList<String>)
+    }
+
+    fun initEditText() {
 
     }
 
+    private fun renderLongEditText(){
 
-    fun initRadioButton() {
-        if (!TextUtils.isEmpty(examInfo!!.item1)) {
-            addRadioButtonView(examInfo!!.item1!!)
-        }
-        if (!TextUtils.isEmpty(examInfo!!.item2)) {
-            addRadioButtonView(examInfo!!.item2!!)
-        }
-        if (!TextUtils.isEmpty(examInfo!!.item3)) {
-            addRadioButtonView(examInfo!!.item3!!)
-        }
-        if (!TextUtils.isEmpty(examInfo!!.item4)) {
-            addRadioButtonView(examInfo!!.item4!!)
+    }
+
+    private fun initRadioButton(items: ArrayList<String>) {
+        for (item in items) {
+            addRadioButtonView(item)
         }
 
         if (examInfo!!.hasFinishedResult) {//判断当前题目是否已经答题答过了，如果是的话，就恢复答题数据，并且设置不可点击
-            radioButtonClickEnable()
+            radioButtonClickDisable()
             if (!examInfo!!.isRightChoice) {//如果没有选择到正确答案的话，就要显示错误答案，否则不显示
                 val radio = listRadio!![examInfo!!.errorAnswer - 1]
                 radio.setTextColor(context!!.getColor(R.color.error))
@@ -138,22 +142,13 @@ class GameFragment : Fragment() {
         }
     }
 
-    fun initCheckBox() {
-        if (!TextUtils.isEmpty(examInfo!!.item1)) {
-            addCheckBoxView(examInfo!!.item1!!)
-        }
-        if (!TextUtils.isEmpty(examInfo!!.item2)) {
-            addCheckBoxView(examInfo!!.item2!!)
-        }
-        if (!TextUtils.isEmpty(examInfo!!.item3)) {
-            addCheckBoxView(examInfo!!.item3!!)
-        }
-        if (!TextUtils.isEmpty(examInfo!!.item4)) {
-            addCheckBoxView(examInfo!!.item4!!)
+    private fun initCheckBox(items: ArrayList<String>) {
+        for (item in items) {
+            addCheckBoxView(item)
         }
 
         if (examInfo!!.hasFinishedResult) {
-            checkBoxClickEnable()
+            checkBoxClickDisable()
             //遍历用户的选择
             for (i in 0 until examInfo!!.resultList.size) {
                 val a = examInfo!!.resultList[i]//拿到答题的标号
@@ -162,7 +157,7 @@ class GameFragment : Fragment() {
             }
 
             for (i in 0 until examInfo!!.rightList.size) {
-                val a = examInfo!!.resultList[i]//拿到答题的标号
+                val a = examInfo!!.rightList[i]//拿到答题的标号
                 listCheck!![a-1].setTextColor(context!!.getColor(R.color.right))
             }
 
@@ -178,26 +173,26 @@ class GameFragment : Fragment() {
             )
             params.setMargins(20, 30, 20, 20)
             appCompatButton.layoutParams = params
-            checkLayout!!.addView(appCompatButton)
+            que_check_layout!!.addView(appCompatButton)
             appCompatButton.setOnClickListener { doHandle() }
         }
     }
 
 
-    fun radioButtonClickEnable() {
+    private fun radioButtonClickDisable() {
         for (radioButton in listRadio!!) {
             radioButton.setClickable(false)
         }
     }
 
-    fun checkBoxClickEnable() {
-        for (checkbos in listCheck!!) {
-            checkbos.setClickable(false)
+    private fun checkBoxClickDisable() {
+        for (checkbox in listCheck!!) {
+            checkbox.setClickable(false)
         }
     }
 
-    private fun initListner() {
-        radioGroup?.setOnCheckedChangeListener { rd, id ->
+    private fun initListener() {
+        que_group?.setOnCheckedChangeListener { rd, id ->
             if (listRadio.isNullOrEmpty()) return@setOnCheckedChangeListener
             for (i in listRadio!!.indices) {
                 var radioButton = listRadio!![i]
@@ -222,16 +217,13 @@ class GameFragment : Fragment() {
                     }
                     examInfo!!.rightAnswer = answer//设置选对题目的标识
                     examInfo!!.hasFinishedResult = true//设置完成了答题
-                    radioButtonClickEnable()//设置不可点击
+                    radioButtonClickDisable()//设置不可点击
 
-                    GameActivity.upDataRightAndError()//更新MainActivity
+                    GameActivity.updateRightAndError()//更新MainActivity
                     break
                 }
             }
         }
-
-        explainLayout!!.setOnClickListener{ explainTxt!!.visibility = View.VISIBLE}
-
     }
 
 
@@ -246,7 +238,7 @@ class GameFragment : Fragment() {
         )
         param.setMargins(10, 10, 10, 10)
         checkBox.layoutParams = param
-        checkLayout!!.addView(checkBox)
+        que_check_layout!!.addView(checkBox)
         listCheck!!.add(checkBox)
     }
 
@@ -264,17 +256,17 @@ class GameFragment : Fragment() {
         )
         param.setMargins(10, 10, 10, 10)
         appCompatRadioButton.layoutParams = param
-        radioGroup?.addView(appCompatRadioButton)
-        listRadio?.add(appCompatRadioButton)
+        que_group.addView(appCompatRadioButton)
+        listRadio.add(appCompatRadioButton)
     }
 
-    fun setErrorDrable(appCompatRadioButton: AppCompatRadioButton) {
+    private fun setErrorDrable(appCompatRadioButton: AppCompatRadioButton) {
         val bitmapDrawable = getDrawable(context!!, R.drawable.ic_error)
         appCompatRadioButton.buttonDrawable = bitmapDrawable
     }
 
 
-    fun setRightDrable(appCompatRadioButton: AppCompatRadioButton) {
+    private fun setRightDrable(appCompatRadioButton: AppCompatRadioButton) {
         val bitmapDrawable = getDrawable(context!!, R.drawable.ic_right)
         appCompatRadioButton.buttonDrawable = bitmapDrawable
     }
@@ -423,8 +415,8 @@ class GameFragment : Fragment() {
             examInfo!!.isRightChoice = false
         }
         examInfo!!.hasFinishedResult = true
-        checkBoxClickEnable()
-        GameActivity.upDataRightAndError()//更新MainActivity
+        checkBoxClickDisable()
+        GameActivity.updateRightAndError()//更新MainActivity
 
     }
     // TODO: Rename method, update argument and hook method into UI event

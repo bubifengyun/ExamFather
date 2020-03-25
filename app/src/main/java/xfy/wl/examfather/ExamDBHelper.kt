@@ -13,9 +13,9 @@ class ExamDBHelper(var context: Context, private var DB_VERSION: Int=CURRENT_VER
     companion object {
         private val TAG = "ExamDBHelper"
         lateinit var examInfoList: List<ExamInfo>
-        var DB_NAME = Environment.getExternalStoragePublicDirectory("car.db")
+        var DB_NAME = Environment.getExternalStoragePublicDirectory("exams.db")
             .toString()
-        var TABLE_NAME = "c1_1" //表名称
+        var TABLE_NAME = "tb_exams" //表名称
         var CURRENT_VERSION = 10 //当前的最新版本，如有表结构变更，该版本号要加一
         private var instance: ExamDBHelper? = null
         @Synchronized
@@ -45,14 +45,18 @@ class ExamDBHelper(var context: Context, private var DB_VERSION: Int=CURRENT_VER
             if (cursor.moveToFirst()) {
                 while (true) {
                     val info = ExamInfo()
-                    info.question = cursor.getString(cursor.getColumnIndex("question"))
-                    info.answer = cursor.getString(cursor.getColumnIndex("answer"))
-                    info.item1 = cursor.getString(cursor.getColumnIndex("item1"))
-                    info.item2 = cursor.getString(cursor.getColumnIndex("item2"))
-                    info.item3 = cursor.getString(cursor.getColumnIndex("item3"))
-                    info.item4 = cursor.getString(cursor.getColumnIndex("item4"))
-                    info.explains = cursor.getString(cursor.getColumnIndex("explains"))
-                    info.url = cursor.getString(cursor.getColumnIndex("url"))
+                    info.test_type = cursor.getInt(cursor.getColumnIndex("test_type"))
+                    info.point_id = cursor.getString(cursor.getColumnIndex("point_id"))
+                    info.item_count = cursor.getInt(cursor.getColumnIndex("item_count"))
+                    info.content = cursor.getString(cursor.getColumnIndex("content"))
+                    info.ans_area = cursor.getString(cursor.getColumnIndex("ans_area"))
+                    info.ans_chars = cursor.getString(cursor.getColumnIndex("ans_chars"))
+                    info.person_type = cursor.getInt(cursor.getColumnIndex("person_type"))
+                    info.career = cursor.getInt(cursor.getColumnIndex("career"))
+                    info.career_step = cursor.getString(cursor.getColumnIndex("career_step"))
+                    info.work_step = cursor.getInt(cursor.getColumnIndex("work_step"))
+                    info.author = cursor.getString(cursor.getColumnIndex("author"))
+                    info.choose_me = cursor.getInt(cursor.getColumnIndex("choose_me"))
                     infoArray.add(info)
                     if (cursor.isLast) {
                         break

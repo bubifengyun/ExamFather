@@ -1,8 +1,9 @@
 package xfy.wl.examfather
 
-data class ExamInfo(var question: String = "", var answer: String = "", var item1: String? ="",
-                    var item2: String? ="", var item3: String? = "", var item4: String? ="",
-                    var explains: String? ="", var url: String? ="") {
+data class ExamInfo(var test_type: Int = 0, var point_id: String? = "", var item_count: Int? =0,
+                    var content: String? ="", var ans_area: String? = "", var ans_chars: String? ="",
+                    var person_type: Int =0, var career: Int = 0, var career_step: String ="",
+                    var work_step: Int =0, var author: String ="", var choose_me: Int =0) {
 
     //单选
     var rightAnswer: Int = 0  //存储正确答案
