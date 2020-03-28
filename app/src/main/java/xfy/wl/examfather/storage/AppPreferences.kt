@@ -9,15 +9,24 @@ class AppPreferences(ctx: Context) {
     var data: SharedPreferences = ctx.getSharedPreferences(
         "APP_PREFERENCES", Context.MODE_PRIVATE)
 
-    fun saveHighScore(highScore: Int) {
-        data.edit().putInt("HIGH_SCORE", highScore).apply()
+    fun saveTopScore(topScore: Int) {
+        if (topScore > data.getInt("TOP_SCORE",0))
+            data.edit().putInt("TOP_SCORE", topScore).apply()
     }
 
-    fun getHighScore(): Int {
-        return data.getInt("HIGH_SCORE", 0)
+    fun getTopScore(): Int {
+        return data.getInt("TOP_SCORE", 0)
     }
 
-    fun clearHighScore() {
-        data.edit().putInt("HIGH_SCORE", 0).apply()
+    fun clearTopScore() {
+        data.edit().putInt("TOP_SCORE", 0).apply()
+    }
+
+    fun saveCurrentExamPage(currentExamPage: Int) {
+        data.edit().putInt("CURRENT_EXAM_PAGE", currentExamPage).apply()
+    }
+
+    fun getCurrentExamPage(): Int {
+        return data.getInt("CURRENT_EXAM_PAGE", 0)
     }
 }

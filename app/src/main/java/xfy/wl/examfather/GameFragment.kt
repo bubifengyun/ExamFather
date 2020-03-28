@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.InputType
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -14,15 +16,17 @@ import android.widget.LinearLayout
 import android.widget.RadioGroup
 //import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.ContextCompat.getDrawable
 import kotlinx.android.synthetic.main.fragment_game.*
+import org.jetbrains.anko.custom.style
 import kotlin.collections.ArrayList
 
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "position"
-private const val ARG_PARAM2 = "param2"
+private const val ARG_PARAM2 = "isExam"
 
 /**
  * A simple [Fragment] subclass.
@@ -34,7 +38,6 @@ private const val ARG_PARAM2 = "param2"
  */
 class GameFragment : Fragment() {
     // TODO: Rename and change types of parameters
-    private var position: Int = 0
     private val TIAN_KONG: Int = 1
     private val XUAN_ZE: Int = 2
     private val PAN_DUAN: Int = 3
@@ -44,8 +47,13 @@ class GameFragment : Fragment() {
 
     var v: View? = null
 
+    private var position: Int = 0
+    private var isExam: Boolean = true
+
     lateinit var listRadio: MutableList<AppCompatRadioButton>
     lateinit var listCheck: MutableList<AppCompatCheckBox>
+    lateinit var listEdit: MutableList<AppCompatEditText>
+    lateinit var appLongEditText: AppCompatEditText
     var realAnswer: Int = 0
     var userAnswer: Int = 0
     lateinit var examInfo: ExamInfo
@@ -54,6 +62,7 @@ class GameFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         position = arguments!!.getInt("position")
+        isExam = arguments!!.getBoolean("isExam", true)
     }
 
     override fun onCreateView(
@@ -81,7 +90,8 @@ class GameFragment : Fragment() {
             TIAN_KONG -> renderTianKong()
             XUAN_ZE -> renderXuanZe()
             PAN_DUAN -> renderPanDuan()
-            JIAN_DA, ZONG_SHU -> renderLongEditText()
+            JIAN_DA, ZONG_SHU -> renderJianDa()
+            JIAN_DA, ZONG_SHU -> renderZongShu()
             DUO_XUAN -> renderDuoXuan()
             else -> {}
         }
@@ -113,11 +123,39 @@ class GameFragment : Fragment() {
     }
 
     fun initEditText() {
+        addLongEditText()
+        if (!isExam) {
+            return
+        }
 
+        if (examInfo.hasFinishedResult) { // 回看的时候，还需要再次判断是否做过
+            checkBoxClickDisable()
+        } else {
+            addSubmitButton(onClickEditTextSubmitListener)
+        }
     }
 
-    private fun renderLongEditText(){
+    private fun renderJianDa() {
+        que_title.text = "第" + (position+1).toString() + "题（简答题）." + examInfo.content
+        initLongEditText()
+    }
 
+    private fun renderZongShu() {
+        que_title.text = "第" + (position+1).toString() + "题（综述题）." + examInfo.content
+        initLongEditText()
+    }
+
+    private fun initLongEditText(){
+        addLongEditText()
+        if (!isExam) {
+            return
+        }
+
+        if (examInfo.hasFinishedResult) { // 回看的时候，还需要再次判断是否做过
+            checkBoxClickDisable()
+        } else {
+            addSubmitButton(onClickLongEditTextSubmitListener)
+        }
     }
 
     private fun initRadioButton(items: ArrayList<String>) {
@@ -125,14 +163,22 @@ class GameFragment : Fragment() {
             addRadioButtonView(item)
         }
 
+        if (!isExam) {
+            radioButtonClickDisable()
+            val radio = listRadio[examInfo.realAnswer]
+            radio.setTextColor(context!!.getColor(R.color.right))
+            setRightDrable(radio)
+            return
+        }
+
         if (examInfo.hasFinishedResult) {//判断当前题目是否已经答题答过了，如果是的话，就恢复答题数据，并且设置不可点击
             radioButtonClickDisable()
-            if (!examInfo!!.isRightChoice) {//如果没有选择到正确答案的话，就要显示错误答案，否则不显示
-                val radio = listRadio!![examInfo!!.userAnswer]
+            if (!examInfo.isRightChoice) {//如果没有选择到正确答案的话，就要显示错误答案，否则不显示
+                val radio = listRadio[examInfo.userAnswer]
                 radio.setTextColor(context!!.getColor(R.color.error))
                 setErrorDrable(radio)
             }
-            val radio = listRadio!![examInfo!!.realAnswer]
+            val radio = listRadio[examInfo.realAnswer]
             radio.setTextColor(context!!.getColor(R.color.right))
             setRightDrable(radio)
         } else {
@@ -143,6 +189,18 @@ class GameFragment : Fragment() {
     private fun initCheckBox(items: ArrayList<String>) {
         for (item in items) {
             addCheckBoxView(item)
+        }
+
+        if (!isExam) {
+            checkBoxClickDisable()
+
+            for (i in 0..3) {
+                if (examInfo.realAnswer.shr(i) % 2 == 1) {
+                    listCheck[i].setTextColor(context!!.getColor(R.color.right))
+                    listCheck[i].isChecked = true
+                }
+            }
+            return
         }
 
         if (examInfo.hasFinishedResult) { // 回看的时候，还需要再次判断是否做过
@@ -160,20 +218,38 @@ class GameFragment : Fragment() {
             }
 
         } else {
-            //添加一个确定按钮
-            val appCompatButton = AppCompatButton(context!!)
-            appCompatButton.text = "确定"
-            appCompatButton.setBackgroundColor(context!!.getColor(R.color.colorPrimary))
-            appCompatButton.setTextColor(Color.parseColor("#ffffff"))
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            params.setMargins(20, 30, 20, 20)
-            appCompatButton.layoutParams = params
-            que_check_layout!!.addView(appCompatButton)
-            appCompatButton.setOnClickListener { onClickDuoXuanSubmitListener() }
+            addSubmitButton(onClickDuoXuanSubmitListener)
         }
+    }
+
+    private fun addLongEditText() {
+        appLongEditText = AppCompatEditText(context!!)
+        appLongEditText.inputType = InputType.TYPE_TEXT_FLAG_MULTI_LINE
+        appLongEditText.hint = "请在这里输入答案..."
+        appLongEditText.minLines = 4
+        appLongEditText.style { "@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox" }
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(20, 30, 20, 20)
+        appLongEditText.layoutParams = params
+        que_check_layout!!.addView(appLongEditText)
+    }
+
+    private fun addSubmitButton(Listener: View.OnClickListener) {
+        val appCompatButton = AppCompatButton(context!!)
+        appCompatButton.text = "确定"
+        appCompatButton.setBackgroundColor(context!!.getColor(R.color.colorPrimary))
+        appCompatButton.setTextColor(Color.parseColor("#ffffff"))
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(20, 30, 20, 20)
+        appCompatButton.layoutParams = params
+        que_check_layout!!.addView(appCompatButton)
+        appCompatButton.setOnClickListener(Listener)
     }
 
 
@@ -298,7 +374,21 @@ class GameFragment : Fragment() {
         appCompatRadioButton.buttonDrawable = bitmapDrawable
     }
 
-    private fun onClickDuoXuanSubmitListener() {
+    private val onClickEditTextSubmitListener = View.OnClickListener { view ->
+        appLongEditText.text = Editable.Factory.getInstance().newEditable("已经回答了！！")
+        appLongEditText.isEnabled = false
+        examInfo.hasFinishedResult = true
+        GameActivity.nextQuestion()
+    }
+
+    private val onClickLongEditTextSubmitListener = View.OnClickListener { view ->
+        appLongEditText.text = Editable.Factory.getInstance().newEditable("已经回答了！！")
+        appLongEditText.isEnabled = false
+        examInfo.hasFinishedResult = true
+        GameActivity.nextQuestion()
+    }
+
+    private val onClickDuoXuanSubmitListener = View.OnClickListener { view ->
         for (i in 0..3) {
             if (realAnswer.shr(i) % 2 == 1) {
                 listCheck[i].setTextColor(context!!.getColor(R.color.right))

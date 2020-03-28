@@ -27,22 +27,6 @@
 			<td>数字形式</td>
 		</tr>
 		<tr>
-			<td>正确</td>
-			<td>0</td>
-			<td>0</td>
-			<td>0</td>
-			<td>1</td>
-			<td>1</td>
-		</tr>
-		<tr>
-			<td>错误</td>
-			<td>0</td>
-			<td>0</td>
-			<td>1</td>
-			<td>0</td>
-			<td>2</td>
-		</tr>
-		<tr>
 			<td>A</td>
 			<td>0</td>
 			<td>0</td>

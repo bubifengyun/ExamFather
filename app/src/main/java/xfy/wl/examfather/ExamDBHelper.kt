@@ -9,7 +9,8 @@ import android.util.Log
 import xfy.wl.examfather.ExamInfo
 import org.jetbrains.anko.db.ManagedSQLiteOpenHelper
 
-class ExamDBHelper(var context: Context, private var DB_VERSION: Int=CURRENT_VERSION) : ManagedSQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
+class ExamDBHelper(var context: Context, private var DB_VERSION: Int=CURRENT_VERSION)
+    : ManagedSQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
     companion object {
         private val TAG = "ExamDBHelper"
         lateinit var examInfoList: List<ExamInfo>

@@ -24,7 +24,7 @@
             android:textSize="60sp"/>
 
         <TextView
-            android:id="@+id/tv_current_score"
+            android:id="@+id/tv_top_score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/class_level"
